@@ -3,6 +3,181 @@ gl = canvas.getContext("webgl2")
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+var angleY = 0, angleX = 0;
+var camX = 0, camY = 0, camZ = 0;
+var zoom = 1;
+
+var positions = [];
+var positionBuffer;
+var types = [];
+var typeBuffer;
+var indicies = [];
+var indexBuffer;
+var timeBuffer;
+var lifetimes = [];
+var lifetimeBuffer;
+
+program = null;
+var UBOIndex;
+
+numPoints = 1000;
+
+function loadStuff(){
+	if (!gl) {
+		alert("Sorry, Webgl2 doesn't appear to be supported on this device\n:(");
+	}
+
+	for (var i = 0; i < numPoints; i++){
+		positions.push(Math.random())
+		positions.push(Math.random())
+		positions.push(Math.random())
+		types.push(Math.floor(Math.random()*5))
+		indicies.push(i)
+		lifetimes.push(Math.random()*30)
+	}
+
+	program = CreateProgram(vertexShader,fragmentShader)
+	UBOIndex = gl.getUniformBlockIndex(program, "Uniforms")
+	var blockSize = gl.getActiveUniformBlockParameter(program, UBOIndex, gl.UNIFORM_BLOCK_DATA_SIZE);
+	UBO = gl.createBuffer();
+	gl.bindBuffer(gl.UNIFORM_BUFFER, UBO);
+	gl.bufferData(gl.UNIFORM_BUFFER, blockSize, gl.DYNAMIC_DRAW);
+	gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+
+	//the 0 is the index of the uniform block
+	gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, UBO);
+
+	UBOVariableIndicies = gl.getUniformIndices(program, ["transform"]);
+	UBOVariableOffsets = gl.getActiveUniforms(program, UBOVariableIndicies, gl.UNIFORM_OFFSET);
+
+	VAO = gl.createVertexArray()
+	gl.bindVertexArray(VAO)
+
+	positionBuffer = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+	gl.enableVertexAttribArray(0)
+	gl.vertexAttribPointer(0,3,gl.FLOAT, false, 0, 0)
+
+	typeBuffer = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer)
+	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(types), gl.DYNAMIC_DRAW);
+	gl.enableVertexAttribArray(1)
+	gl.vertexAttribPointer(1,1,gl.UNSIGNED_INT, false, 0, 0)
+
+	indexBuffer = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, indexBuffer)
+	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(indicies), gl.STATIC_DRAW);
+	gl.enableVertexAttribArray(2)
+	gl.vertexAttribPointer(2,1,gl.UNSIGNED_INT	, false, 0, 0)
+
+	timeBuffer = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, timeBuffer)
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(numPoints).fill(0), gl.DYNAMIC_DRAW);
+	gl.enableVertexAttribArray(3)
+	gl.vertexAttribPointer(3,1,gl.FLOAT, false, 0, 0)
+
+	lifetimeBuffer = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, lifetimeBuffer)
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lifetimes), gl.STATIC_DRAW);
+	gl.enableVertexAttribArray(4)
+	gl.vertexAttribPointer(4,1,gl.FLOAT, false, 0, 0)
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, null)
+
+
+
+	requestAnimationFrame(Draw)
+	startTime = Date.now()
+}
+
+
+var startTime = Date.now();
+
+function Draw(){
+	var elapsedTime = Date.now() - startTime;
+
+	gl.clearColor(0,0,0,1)
+	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+	gl.uniformBlockBinding(program, UBOIndex, 0)
+
+	gl.bindBuffer(gl.UNIFORM_BUFFER, UBO)
+
+	var translate = [
+		1, 0, 0, -camX,
+		0, 1, 0, -camY,
+		0, 0, 1, -camZ,
+		0, 0, 0, 1
+	];
+	var yRot = [
+		Math.cos(angleY), 0, -Math.sin(angleY), 0,
+		0, 1, 0, 0,
+		Math.sin(angleY), 0, Math.cos(angleY), 0,
+		0, 0, 0, 1
+	];
+	var xRot = [
+		1, 0, 0, 0,
+		0, Math.cos(angleX), -Math.sin(angleX), 0,
+		0, Math.sin(angleX), Math.cos(angleX), 0,
+		0, 0, 0, 1
+	];
+	var project = [
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 1, 0
+	]
+	var screenStretch = [
+		(canvas.width > canvas.height) ? canvas.height / canvas.width : 1, 0, 0, 0,
+		0, (canvas.width < canvas.height) ? canvas.width / canvas.height : 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	]
+	var zoomMat = [
+		zoom, 0, 0, 0,
+		0, zoom, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	]
+	var combined = MulMatrix4x4(yRot, translate);
+	combined = MulMatrix4x4(xRot, combined);
+	combined = MulMatrix4x4(project, combined);
+	combined = MulMatrix4x4(screenStretch, combined);
+	combined = MulMatrix4x4(zoomMat, combined);
+
+	startTime = Date.now()
+}
+
+function CreateShader(source, type) {
+	var shader = gl.createShader(type);
+	gl.shaderSource(shader, source);
+	gl.compileShader(shader);
+	var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+	if (success) {
+		return shader;
+	}
+	console.error(gl.getShaderInfoLog(shader));
+	alert(gl.getShaderInfoLog(shader))
+	gl.deleteShader(shader);
+}
+
+function CreateProgram(vertexSource, fragmentSource) {
+	var vertexShader = CreateShader(vertexSource, gl.VERTEX_SHADER);
+	var fragmentShader = CreateShader(fragmentSource, gl.FRAGMENT_SHADER);
+
+	var ShaderProgram = gl.createProgram();
+	gl.attachShader(ShaderProgram, vertexShader);
+	gl.attachShader(ShaderProgram, fragmentShader);
+
+	gl.linkProgram(ShaderProgram);
+	var success = gl.getProgramParameter(ShaderProgram, gl.LINK_STATUS);
+	if (success) {
+		return ShaderProgram;
+	}
+	console.error(gl.getProgramInfoLog(ShaderProgram));
+	gl.deleteProgram(ShaderProgram);
+}
 
 function MulMatrix4x4(leftMat, rightMat) {
 	return [

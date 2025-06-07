@@ -1,4 +1,4 @@
-var starFragmentShader = `#version 300 es
+var fragmentShader = `#version 300 es
     precision lowp float;
 
     in vec4 color;
