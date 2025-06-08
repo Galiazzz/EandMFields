@@ -12,13 +12,13 @@ var vertexShader = `#version 300 es
     out vec4 color;
     void main(){
         vec4 ptColor = vec4(1.0,1.0,1.0,1.0);
-        switch(type){
+        /*switch(type){
             case 0u:ptColor=vec4(0.0,0.0,1.0,1.0);//Electric fields
             case 1u:ptColor=vec4(1.0,0.0,0.0,1.0);//Magnetic fields
             case 2u:ptColor=vec4(0.7,0.0,1.0,1.0);//Electric displacement field
             case 3u:ptColor=vec4(1.0,1.0,0.0,1.0);//H field
             case 4u:ptColor=vec4(0.0,1.0,0.0,1.0);//Vector potential
-        }
+        }*/
         color = ptColor;
         vec4 transformed = vec4(position, 1) * transform;
 		//color.a = 1.0 / transformed.z;

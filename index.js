@@ -84,6 +84,7 @@ function loadStuff(){
 	gl.vertexAttribPointer(4,1,gl.FLOAT, false, 0, 0)
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, null)
+	gl.bindVertexArray(null)
 
 
 
@@ -146,7 +147,17 @@ function Draw(){
 	combined = MulMatrix4x4(screenStretch, combined);
 	combined = MulMatrix4x4(zoomMat, combined);
 
+	gl.bufferSubData(gl.UNIFORM_BUFFER, UBOVariableOffsets[0], new Float32Array(combined));
+	gl.bindBuffer(gl.UNIFORM_BUFFER, null);
+
+	gl.viewport(0, 0, canvas.width, canvas.height);
+
+	gl.useProgram(program)
+	gl.bindVertexArray(VAO)
+	gl.drawArrays(gl.POINTS, 0, numPoints)
+
 	startTime = Date.now()
+	//requestAnimationFrame(Draw)
 }
 
 function CreateShader(source, type) {
