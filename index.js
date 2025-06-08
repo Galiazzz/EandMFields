@@ -28,9 +28,9 @@ function loadStuff(){
 	}
 
 	for (var i = 0; i < numPoints; i++){
-		positions.push(Math.random())
-		positions.push(Math.random())
-		positions.push(Math.random())
+		positions.push(Math.random()*2-1)
+		positions.push(Math.random()*2-1)
+		positions.push(Math.random()*2-1)
 		types.push(Math.floor(Math.random()*5))
 		indicies.push(i)
 		lifetimes.push(Math.random()*30)
@@ -63,13 +63,13 @@ function loadStuff(){
 	gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer)
 	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(types), gl.DYNAMIC_DRAW);
 	gl.enableVertexAttribArray(1)
-	gl.vertexAttribPointer(1,1,gl.UNSIGNED_INT, false, 0, 0)
+	gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0)
 
 	indexBuffer = gl.createBuffer()
 	gl.bindBuffer(gl.ARRAY_BUFFER, indexBuffer)
 	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(indicies), gl.STATIC_DRAW);
 	gl.enableVertexAttribArray(2)
-	gl.vertexAttribPointer(2,1,gl.UNSIGNED_INT	, false, 0, 0)
+	gl.vertexAttribIPointer(2,1,gl.UNSIGNED_INT, false, 0, 0)
 
 	timeBuffer = gl.createBuffer()
 	gl.bindBuffer(gl.ARRAY_BUFFER, timeBuffer)

@@ -12,17 +12,18 @@ var vertexShader = `#version 300 es
     out vec4 color;
     void main(){
         vec4 ptColor = vec4(1.0,1.0,1.0,1.0);
-        /*switch(type){
-            case 0u:ptColor=vec4(0.0,0.0,1.0,1.0);//Electric fields
-            case 1u:ptColor=vec4(1.0,0.0,0.0,1.0);//Magnetic fields
-            case 2u:ptColor=vec4(0.7,0.0,1.0,1.0);//Electric displacement field
-            case 3u:ptColor=vec4(1.0,1.0,0.0,1.0);//H field
-            case 4u:ptColor=vec4(0.0,1.0,0.0,1.0);//Vector potential
-        }*/
+        
+        if(type==0u){ptColor=vec4(0.0,0.5,1.0,1.0);}//Electric fields
+        if(type==1u){ptColor=vec4(1.0,0.2,0.2,1.0);}//Magnetic fields
+        if(type==2u){ptColor=vec4(0.7,0.0,1.0,1.0);}//Electric displacement field
+        if(type==3u){ptColor=vec4(1.0,1.0,0.0,1.0);}//H field
+        if(type==4u){ptColor=vec4(0.0,1.0,0.0,1.0);}//Vector potential
+
+
         color = ptColor;
         vec4 transformed = vec4(position, 1) * transform;
 		//color.a = 1.0 / transformed.z;
         gl_Position = transformed;
-        gl_PointSize = 1.0;
+        gl_PointSize = 3.0;
     }
 `;
