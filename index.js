@@ -8,14 +8,21 @@ var camX = 0, camY = 0, camZ = 0;
 var zoom = 1;
 
 var positions = [];
-var positionBuffer;
 var types = [];
-var typeBuffer;
-var indicies = [];
-var indexBuffer;
-var timeBuffer;
+var states = [];
 var lifetimes = [];
+
+var positionBufferA, positionBufferB;
+var typeBuffer;
+var stateBufferA, stateBufferB;
+var timeBufferA, timeBufferB;
 var lifetimeBuffer;
+
+var transformFeedbackA, transformFeedbackB;
+
+var VAOA, VAOB;
+var currentVertexArray;
+var currentTransformFeedback;
 
 program = null;
 var UBOIndex;
@@ -32,7 +39,7 @@ function loadStuff(){
 		positions.push(Math.random()*2-1)
 		positions.push(Math.random()*2-1)
 		types.push(Math.floor(Math.random()*5))
-		indicies.push(i)
+		states.push(i)
 		lifetimes.push(Math.random()*30)
 	}
 
@@ -47,14 +54,14 @@ function loadStuff(){
 	//the 0 is the index of the uniform block
 	gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, UBO);
 
-	UBOVariableIndicies = gl.getUniformIndices(program, ["transform"]);
+	UBOVariableIndicies = gl.getUniformIndices(program, ["transform","dt"]);
 	UBOVariableOffsets = gl.getActiveUniforms(program, UBOVariableIndicies, gl.UNIFORM_OFFSET);
 
-	VAO = gl.createVertexArray()
-	gl.bindVertexArray(VAO)
+	VAOA = gl.createVertexArray()
+	gl.bindVertexArray(VAOA)
 
-	positionBuffer = gl.createBuffer()
-	gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+	positionBufferA = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferA)
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
 	gl.enableVertexAttribArray(0)
 	gl.vertexAttribPointer(0,3,gl.FLOAT, false, 0, 0)
@@ -65,14 +72,14 @@ function loadStuff(){
 	gl.enableVertexAttribArray(1)
 	gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0)
 
-	indexBuffer = gl.createBuffer()
-	gl.bindBuffer(gl.ARRAY_BUFFER, indexBuffer)
-	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(indicies), gl.STATIC_DRAW);
+	stateBufferA = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, stateBufferA)
+	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(states), gl.DYNAMIC_DRAW);
 	gl.enableVertexAttribArray(2)
 	gl.vertexAttribIPointer(2,1,gl.UNSIGNED_INT, false, 0, 0)
 
-	timeBuffer = gl.createBuffer()
-	gl.bindBuffer(gl.ARRAY_BUFFER, timeBuffer)
+	timeBufferA = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, timeBufferA)
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(numPoints).fill(0), gl.DYNAMIC_DRAW);
 	gl.enableVertexAttribArray(3)
 	gl.vertexAttribPointer(3,1,gl.FLOAT, false, 0, 0)
@@ -83,10 +90,52 @@ function loadStuff(){
 	gl.enableVertexAttribArray(4)
 	gl.vertexAttribPointer(4,1,gl.FLOAT, false, 0, 0)
 
+	transformFeedbackA = gl.createTransformFeedback();
+	gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedbackA);
+	gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,positionBufferA);
+	gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,1,stateBufferA);
+	gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,2,timeBufferA);
+
+
+	VAOB = gl.createVertexArray()
+	gl.bindVertexArray(VAOB)
+	positionBufferB = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferB)
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW)
+	gl.enableVertexAttribArray(0);
+	gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0)
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer)
+	gl.enableVertexAttribArray(1)
+	gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT,false,0,0)
+
+	stateBufferB = gl.createBuffer()
+	gl.bindBuffer(gl.ARRAY_BUFFER, stateBufferB)
+	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(states), gl.DYNAMIC_DRAW);
+	gl.enableVertexAttribArray(2)
+	gl.vertexAttribIPointer(2,1,gl.UNSIGNED_INT, false, 0, 0);
+
+	timeBufferB = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, timeBufferB);
+	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(numPoints).fill(0), gl.DYNAMIC_DRAW);
+	gl.enableVertexAttribArray(3)
+	gl.vertexAttribPointer(3,1,gl.FLOAT,false,0,0);
+
+	gl.bindBuffer(gl.ARRAY_BUFFER,lifetimeBuffer);
+	gl.enableVertexAttribArray(4);
+	gl.vertexAttribPointer(4,1,gl.FLOAT,false,0,0);
+
+	transformFeedbackB = gl.createTransformFeedback();
+	gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedbackB);
+	gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,positionBufferB);
+	gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,1,stateBufferB);
+	gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,2,timeBufferB);
+
 	gl.bindBuffer(gl.ARRAY_BUFFER, null)
 	gl.bindVertexArray(null)
 
-
+	currentVertexArray = VAOA;
+	currentTransformFeedback = transformFeedbackB;
 
 	requestAnimationFrame(Draw)
 	startTime = Date.now()
@@ -148,16 +197,87 @@ function Draw(){
 	combined = MulMatrix4x4(zoomMat, combined);
 
 	gl.bufferSubData(gl.UNIFORM_BUFFER, UBOVariableOffsets[0], new Float32Array(combined));
+	gl.bufferSubData(gl.UNIFORM_BUFFER, UBOVariableOffsets[1], new Float32Array([elapsedTime]));
 	gl.bindBuffer(gl.UNIFORM_BUFFER, null);
 
 	gl.viewport(0, 0, canvas.width, canvas.height);
 
 	gl.useProgram(program)
-	gl.bindVertexArray(VAO)
-	gl.drawArrays(gl.POINTS, 0, numPoints)
+	gl.bindVertexArray(currentVertexArray)
+	gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, currentTransformFeedback);
+	if(currentTransformFeedback==transformFeedbackA){
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,positionBufferA);
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,1,stateBufferA);
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,2,timeBufferA);
+	} else{
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,positionBufferB);
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,1,stateBufferB);
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,2,timeBufferB);
+	}
+	gl.beginTransformFeedback(gl.POINTS);
+	gl.drawArrays(gl.POINTS, 0, numPoints);
+	gl.endTransformFeedback();
+	if(currentVertexArray == VAOA){
+		currentVertexArray = VAOB;
+		currentTransformFeedback = transformFeedbackA;
+	} else{
+		currentVertexArray = VAOA;
+		currentTransformFeedback = transformFeedbackB
+	}
+
+
+	var timeMultiplier = elapsedTime * 0.1;
+
+	if (keydown[10]) {
+		speedModifier = 5;
+	}
+	else if (keydown[11]) {
+		speedModifier = 0.1;
+	}
+	else {
+		speedModifier = 1;
+	}
+
+	if (keydown[0] && canvasFocused) {
+		camZ += 0.01 * Math.cos(angleY) * speedModifier * timeMultiplier;
+		camX += 0.01 * Math.sin(angleY) * speedModifier * timeMultiplier;
+	}
+	if (keydown[1] && canvasFocused) {
+		camX -= 0.01 * Math.cos(angleY) * speedModifier * timeMultiplier;
+		camZ += 0.01 * Math.sin(angleY) * speedModifier * timeMultiplier;
+	}
+	if (keydown[2] && canvasFocused) {
+		camZ -= 0.01 * Math.cos(angleY) * speedModifier * timeMultiplier;
+		camX -= 0.01 * Math.sin(angleY) * speedModifier * timeMultiplier;
+	}
+	if (keydown[3] && canvasFocused) {
+		camX += 0.01 * Math.cos(angleY) * speedModifier * timeMultiplier;
+		camZ -= 0.01 * Math.sin(angleY) * speedModifier * timeMultiplier;
+	}
+	if (keydown[8] && canvasFocused) {
+		camY += 0.01 * speedModifier * timeMultiplier;
+	}
+	if (keydown[9] && canvasFocused) {
+		camY -= 0.01 * speedModifier * timeMultiplier;
+	}
+	if (keydown[4] && canvasFocused) {
+		angleX += 0.01 * timeMultiplier;
+		angleX = Math.max(Math.min(angleX, Math.PI / 2), -Math.PI / 2)
+	}
+	if (keydown[5] && canvasFocused) {
+		angleY -= 0.01 * timeMultiplier;
+	}
+	if (keydown[6] && canvasFocused) {
+		angleX -= 0.01 * timeMultiplier;
+		angleX = Math.max(Math.min(angleX, Math.PI / 2), -Math.PI / 2)
+	}
+	if (keydown[7] && canvasFocused) {
+		angleY += 0.01 * timeMultiplier;
+	}
+
 
 	startTime = Date.now()
-	//requestAnimationFrame(Draw)
+	requestAnimationFrame(Draw)
 }
 
 function CreateShader(source, type) {
@@ -181,6 +301,8 @@ function CreateProgram(vertexSource, fragmentSource) {
 	gl.attachShader(ShaderProgram, vertexShader);
 	gl.attachShader(ShaderProgram, fragmentShader);
 
+	gl.transformFeedbackVaryings(ShaderProgram, ["pos", "s", "t"], gl.SEPARATE_ATTRIBS);
+
 	gl.linkProgram(ShaderProgram);
 	var success = gl.getProgramParameter(ShaderProgram, gl.LINK_STATUS);
 	if (success) {
@@ -200,6 +322,8 @@ function MulMatrix4x4(leftMat, rightMat) {
 }
 
 var keydown = new Array(12).fill(false);
+
+canvasFocused = true;
 
 document.addEventListener("keyup", function(e) {
 	if (e.key.toLowerCase() == "w") { keydown[0] = false }
@@ -234,7 +358,112 @@ document.addEventListener("keydown", function(e) {
 });
 
 
+var isPointerCaptured = false;
+
+function CanvasClick() {
+	canvasFocused = true;
+	canvas.requestPointerLock();
+}
+
+document.addEventListener("pointerlockchange", function() {
+	if (document.pointerLockElement === canvas) {
+		isPointerCaptured = true;
+		canvasFocused = true;
+		pastTouches = [];
+	}
+	else {
+		isPointerCaptured = false;
+		canvasFocused = false;
+		pastTouches = [];
+	}
+});
+
+document.addEventListener("mousemove", function(e) {
+	if (isPointerCaptured) {
+		angleY += e.movementX * 0.005;
+		angleX -= e.movementY * 0.005;
+		angleX = Math.max(Math.min(angleX, Math.PI / 2), -Math.PI / 2)
+	}
+})
+
+function CanvasDoubleClick() {
+	canvasFocused = false;
+	document.exitPointerLock();
+}
+
+
 document.addEventListener("resize",function(e){
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 });
+
+
+
+
+var numTouches = 0;
+var pastTouches = [];
+document.addEventListener("touchstart", function(e) {
+	if (canvasFocused) {
+		e.preventDefault();
+		for (var i = 0; i < e.changedTouches.length; i++) {
+			pastTouches.push(e.changedTouches[i]);
+			numTouches++;
+		}
+	}
+});
+document.addEventListener("touchmove", function(e) {
+	if (canvasFocused) {
+		e.preventDefault();
+		e.stopImmediatePropagation();
+		if (numTouches == 1) {
+			angleY += 0.005 * (pastTouches[0].clientX - e.changedTouches[0].clientX);
+			angleX -= 0.005 * (pastTouches[0].clientY - e.changedTouches[0].clientY);
+			angleX = Math.max(Math.min(angleX, Math.PI / 2), -Math.PI / 2)
+			pastTouches[0] = e.changedTouches[0];
+		}
+		else if (numTouches == 2) {
+			if (e.changedTouches.length == 1) {
+				var replacedIndex = 1;
+				if (Math.hypot(pastTouches[0].clientX - e.changedTouches[0].clientX, pastTouches[0].clientY - e.changedTouches[0].clientY) < Math.hypot(pastTouches[1].clientX - e.changedTouches[0].clientX, pastTouches[1].clientY - e.changedTouches[0].clientY)) {
+					replacedIndex = 0;
+				}
+				var dist = Math.hypot(pastTouches[1 - replacedIndex].clientX - e.changedTouches[0].clientX, pastTouches[1 - replacedIndex].clientY - e.changedTouches[0].clientY) - Math.hypot(pastTouches[0].clientX - pastTouches[1].clientX, pastTouches[0].clientY - pastTouches[1].clientY);
+				var direction = RadiansToPointOnSphere({ RA: -angleY, DEC: angleX });
+				camX += 0.01 * dist * direction[0] * speedModifier;
+				camY += 0.01 * dist * direction[1] * speedModifier;
+				camZ += 0.01 * dist * direction[2] * speedModifier;
+				pastTouches[replacedIndex] = e.changedTouches[0];
+			}
+			else {
+				var dist = Math.hypot(e.changedTouches[0].clientX - e.changedTouches[1].clientX, e.changedTouches[0].clientY - e.changedTouches[1].clientY) - Math.hypot(pastTouches[0].clientX - pastTouches[1].clientX, pastTouches[0].clientY - pastTouches[1].clientY);
+				var direction = RadiansToPointOnSphere({ RA: -angleY, DEC: angleX });
+				camX += 0.01 * dist * direction[0] * speedModifier;
+				camY += 0.01 * dist * direction[1] * speedModifier;
+				camZ += 0.01 * dist * direction[2] * speedModifier;
+				pastTouches[0] = e.changedTouches[0];
+				pastTouches[1] = e.changedTouches[1];
+			}
+		}
+	}
+}, { passive: false });
+
+function EndPointer(e) {
+	for (var j = 0; j < e.changedTouches.length; j++) {
+		var minDist = Infinity;
+		var minDistIndex = null;
+		for (var i = 0; i < pastTouches.length; i++) {
+			var dist = Math.hypot(pastTouches[i].clientX - e.changedTouches[j].clientX, pastTouches[i].clientY - e.changedTouches[j].clientY);
+			if (dist < minDist) {
+				minDist = dist;
+				minDistIndex = i;
+			}
+		}
+		if (minDistIndex != null) {
+			pastTouches.splice(minDistIndex, 1);
+			numTouches--;
+		}
+	}
+}
+
+document.addEventListener("touchend", EndPointer);
+document.addEventListener("touchcancel", EndPointer);
