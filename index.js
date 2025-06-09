@@ -40,7 +40,7 @@ function loadStuff(){
 		positions.push(Math.random()*2-1)
 		types.push(Math.floor(Math.random()*5))
 		states.push(i)
-		lifetimes.push(Math.random()*30)
+		lifetimes.push(Math.random()*5*1000)
 	}
 
 	program = CreateProgram(vertexShader,fragmentShader)

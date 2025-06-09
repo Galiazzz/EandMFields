@@ -23,7 +23,9 @@ var vertexShader = `#version 300 es
     }
 
     float Random01(uint i){
-        return 1.0;
+        uint masked = i&0x007fffffu;
+        masked |=       0x00ffffffu;
+        return uintBitsToFloat(masked);
     }
 
     void main(){
@@ -43,10 +45,13 @@ var vertexShader = `#version 300 es
         s = state;
         t = time+dt;
         if(t>lifetime){
-            t=0.;
+            t=0.f;
             s = xorshift(s);
+            pos.x = float(s)/float(1u<<31)-1.;//Random01(s);
             s = xorshift(s);
+            pos.y = float(s)/float(1u<<31)-1.;//Random01(s);
             s = xorshift(s);
+            pos.z = float(s)/float(1u<<31)-1.;//Random01(s);
         }
         gl_Position = transformed;
         gl_PointSize = 3.0;
