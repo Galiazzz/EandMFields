@@ -398,7 +398,13 @@ document.addEventListener("resize",function(e){
 });
 
 
-
+//find point on unit sphere given coodinates
+function RadiansToPointOnSphere(coordObj) {
+	return [
+		Math.cos(coordObj.DEC) * -Math.sin(coordObj.RA),
+		Math.sin(coordObj.DEC),
+		Math.cos(coordObj.DEC) * Math.cos(coordObj.RA)];
+}
 
 var numTouches = 0;
 var pastTouches = [];
