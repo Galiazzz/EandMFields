@@ -39,7 +39,7 @@ function loadStuff(){
 		positions.push(Math.random()*2-1)
 		positions.push(Math.random()*2-1)
 		types.push(Math.floor(Math.random()*5))
-		states.push(i)
+		states.push(i*10000)
 		lifetimes.push(Math.random()*5*1000)
 	}
 
