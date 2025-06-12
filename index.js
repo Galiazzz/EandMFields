@@ -137,6 +137,8 @@ function loadStuff(){
 	currentVertexArray = VAOA;
 	currentTransformFeedback = transformFeedbackB;
 
+	updateParticleNum()
+
 	requestAnimationFrame(Draw)
 	startTime = Date.now()
 }
@@ -363,6 +365,7 @@ var isPointerCaptured = false;
 function CanvasClick() {
 	canvasFocused = true;
 	canvas.requestPointerLock();
+	document.body.style.overflow = "hidden";
 }
 
 document.addEventListener("pointerlockchange", function() {
@@ -375,6 +378,7 @@ document.addEventListener("pointerlockchange", function() {
 		isPointerCaptured = false;
 		canvasFocused = false;
 		pastTouches = [];
+		document.body.style.overflow = "scroll";
 	}
 });
 
@@ -389,6 +393,7 @@ document.addEventListener("mousemove", function(e) {
 function CanvasDoubleClick() {
 	canvasFocused = false;
 	document.exitPointerLock();
+	document.body.style.overflow = "scroll";
 }
 
 
@@ -473,3 +478,10 @@ function EndPointer(e) {
 
 document.addEventListener("touchend", EndPointer);
 document.addEventListener("touchcancel", EndPointer);
+
+
+numSlider = document.getElementById("numParticleSlider");
+numDisplay = document.getElementById("particleDisplay");
+function updateParticleNum(){
+	numDisplay.innerText = numPoints;
+}

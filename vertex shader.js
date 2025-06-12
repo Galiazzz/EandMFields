@@ -15,6 +15,12 @@ var vertexShader = `#version 300 es
     out float t;
     out vec4 color;
 
+    const float epsilon_0 = 8.85418782e-12; //m^-3 kg^-1 s^4 A^2\\
+    const float PI = 3.14159265359;
+    const float mu_0 = 1.25663706127e-6; //N A^-2
+
+    const float timeScale = 1.0;
+
     uint xorshift(uint st){
         st ^= st << 14;
         st ^= st >> 17;
@@ -31,11 +37,22 @@ var vertexShader = `#version 300 es
     void main(){
         vec4 ptColor = vec4(1.0,1.0,1.0,1.0);
         
-        if(type==0u){ptColor=vec4(0.0,0.5,1.0,1.0);}//Electric fields
-        if(type==1u){ptColor=vec4(1.0,0.2,0.2,1.0);}//Magnetic fields
-        if(type==2u){ptColor=vec4(0.7,0.0,1.0,1.0);}//Electric displacement field
-        if(type==3u){ptColor=vec4(1.0,1.0,0.0,1.0);}//H field
-        if(type==4u){ptColor=vec4(0.0,1.0,0.0,1.0);}//Vector potential
+        if(type==0u){ //Electric fields
+            ptColor=vec4(0.0,0.5,1.0,1.0);
+
+        }
+        if(type==1u){ //Magnetic fields
+            ptColor=vec4(1.0,0.2,0.2,1.0);
+        }
+        if(type==2u){ //Electric displacement field
+            ptColor=vec4(0.7,0.0,1.0,1.0);
+        }
+        if(type==3u){ //H field
+            ptColor=vec4(1.0,1.0,0.0,1.0);
+        }
+        if(type==4u){ //Vector potential
+            ptColor=vec4(0.0,1.0,0.0,1.0);
+        }
 
 
         color = ptColor;
