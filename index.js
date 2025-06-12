@@ -24,10 +24,11 @@ var VAOA, VAOB;
 var currentVertexArray;
 var currentTransformFeedback;
 
-program = null;
+var program = null;
 var UBOIndex;
 
-numPoints = 1000;
+var numPoints = 1000;
+var drawPoints;
 
 function loadStuff(){
 	if (!gl) {
@@ -38,10 +39,12 @@ function loadStuff(){
 		positions.push(Math.random()*2-1)
 		positions.push(Math.random()*2-1)
 		positions.push(Math.random()*2-1)
-		types.push(Math.floor(Math.random()*5))
+		types.push(0)
 		states.push(i*10000)
 		lifetimes.push(Math.random()*5*1000)
 	}
+
+	drawPoints = numPoints;
 
 	program = CreateProgram(vertexShader,fragmentShader)
 	UBOIndex = gl.getUniformBlockIndex(program, "Uniforms")
@@ -60,35 +63,35 @@ function loadStuff(){
 	VAOA = gl.createVertexArray()
 	gl.bindVertexArray(VAOA)
 
-	positionBufferA = gl.createBuffer()
-	gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferA)
+	positionBufferA = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferA);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
-	gl.enableVertexAttribArray(0)
+	gl.enableVertexAttribArray(0);
 	gl.vertexAttribPointer(0,3,gl.FLOAT, false, 0, 0)
 
-	typeBuffer = gl.createBuffer()
+	typeBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer)
-	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(types), gl.DYNAMIC_DRAW);
-	gl.enableVertexAttribArray(1)
+	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(types), gl.STATIC_DRAW);
+	gl.enableVertexAttribArray(1);
 	gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0)
 
-	stateBufferA = gl.createBuffer()
-	gl.bindBuffer(gl.ARRAY_BUFFER, stateBufferA)
+	stateBufferA = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, stateBufferA);
 	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(states), gl.DYNAMIC_DRAW);
-	gl.enableVertexAttribArray(2)
+	gl.enableVertexAttribArray(2);
 	gl.vertexAttribIPointer(2,1,gl.UNSIGNED_INT, false, 0, 0)
 
-	timeBufferA = gl.createBuffer()
-	gl.bindBuffer(gl.ARRAY_BUFFER, timeBufferA)
+	timeBufferA = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, timeBufferA);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(numPoints).fill(0), gl.DYNAMIC_DRAW);
-	gl.enableVertexAttribArray(3)
-	gl.vertexAttribPointer(3,1,gl.FLOAT, false, 0, 0)
+	gl.enableVertexAttribArray(3);
+	gl.vertexAttribPointer(3,1,gl.FLOAT, false, 0, 0);
 
-	lifetimeBuffer = gl.createBuffer()
-	gl.bindBuffer(gl.ARRAY_BUFFER, lifetimeBuffer)
+	lifetimeBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER, lifetimeBuffer);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(lifetimes), gl.STATIC_DRAW);
-	gl.enableVertexAttribArray(4)
-	gl.vertexAttribPointer(4,1,gl.FLOAT, false, 0, 0)
+	gl.enableVertexAttribArray(4);
+	gl.vertexAttribPointer(4,1,gl.FLOAT, false, 0, 0);
 
 	transformFeedbackA = gl.createTransformFeedback();
 	gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedbackA);
@@ -118,7 +121,7 @@ function loadStuff(){
 	timeBufferB = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, timeBufferB);
 	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(numPoints).fill(0), gl.DYNAMIC_DRAW);
-	gl.enableVertexAttribArray(3)
+	gl.enableVertexAttribArray(3);
 	gl.vertexAttribPointer(3,1,gl.FLOAT,false,0,0);
 
 	gl.bindBuffer(gl.ARRAY_BUFFER,lifetimeBuffer);
@@ -217,7 +220,7 @@ function Draw(){
 		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,2,timeBufferB);
 	}
 	gl.beginTransformFeedback(gl.POINTS);
-	gl.drawArrays(gl.POINTS, 0, numPoints);
+	gl.drawArrays(gl.POINTS, 0, drawPoints);
 	gl.endTransformFeedback();
 	if(currentVertexArray == VAOA){
 		currentVertexArray = VAOB;
@@ -277,6 +280,13 @@ function Draw(){
 		angleY += 0.01 * timeMultiplier;
 	}
 
+	updateParticleNum()
+
+	ratioE = 1;
+	ratioB = 0;
+	ratioD = 0;
+	ratioH = 0;
+	ratioV = 0;
 
 	startTime = Date.now()
 	requestAnimationFrame(Draw)
@@ -483,5 +493,153 @@ document.addEventListener("touchcancel", EndPointer);
 numSlider = document.getElementById("numParticleSlider");
 numDisplay = document.getElementById("particleDisplay");
 function updateParticleNum(){
-	numDisplay.innerText = numPoints;
+	var nP = parseInt(numSlider.value)
+	var diff = nP - numPoints;
+	if(diff>0){
+		var tmp = [[],[],[],[]];
+		for(i = 0; i < diff; i++){
+			tmp[0].push(Math.random()*2-1);
+			tmp[0].push(Math.random()*2-1);
+			tmp[0].push(Math.random()*2-1);
+
+			tmp[2].push(Math.floor(Math.random()*10000));
+			tmp[3].push(Math.random()*5*1000)
+		}
+		
+		numE = Math.round(diff*ratioE);
+		numB = Math.round(diff*ratioB);
+		numD = Math.round(diff*ratioD);
+		numH = Math.round(diff*ratioH);
+		numV = Math.round(diff*ratioV);
+		for(i = 0; i < numE; i++){tmp[1].push(0);}
+		for(i = 0; i < numB; i++){tmp[1].push(1);}
+		for(i = 0; i < numD; i++){tmp[1].push(2);}
+		for(i = 0; i < numH; i++){tmp[1].push(3);}
+		for(i = 0; i < numV; i++){tmp[1].push(4);}
+
+		gl.bindVertexArray(VAOA);
+		gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+
+		var newBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.COPY_WRITE_BUFFER,newBuffer);
+		gl.bindBuffer(gl.COPY_READ_BUFFER,positionBufferA);
+		gl.bufferData(gl.COPY_WRITE_BUFFER, nP*4*3, gl.DYNAMIC_DRAW)
+		gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, 0, 0, numPoints*4*3);
+		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4*3, new Float32Array(tmp[0]));
+		positionBufferA = newBuffer;
+		gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferA);
+		gl.enableVertexAttribArray(0);
+		gl.vertexAttribPointer(0,3,gl.FLOAT, false, 0, 0);
+
+		newBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.COPY_WRITE_BUFFER,newBuffer);
+		gl.bindBuffer(gl.COPY_READ_BUFFER,typeBuffer);
+		gl.bufferData(gl.COPY_WRITE_BUFFER, nP*4, gl.STATIC_DRAW)
+		gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, 0, 0, numPoints*4);
+		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Uint32Array(tmp[1]));
+		typeBuffer = newBuffer;
+		gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer);
+		gl.enableVertexAttribArray(1);
+		gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0);
+
+		newBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.COPY_WRITE_BUFFER, newBuffer);
+		gl.bindBuffer(gl.COPY_READ_BUFFER,stateBufferA);
+		gl.bufferData(gl.COPY_WRITE_BUFFER, nP*4, gl.DYNAMIC_DRAW)
+		gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, 0, 0, numPoints*4);
+		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Uint32Array(tmp[2]));
+		stateBufferA = newBuffer;
+		gl.bindBuffer(gl.ARRAY_BUFFER, stateBufferA);
+		gl.enableVertexAttribArray(2);
+		gl.vertexAttribIPointer(2,1,gl.UNSIGNED_INT, false, 0, 0);
+
+		newBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.COPY_WRITE_BUFFER, newBuffer);
+		gl.bindBuffer(gl.COPY_READ_BUFFER,timeBufferA);
+		gl.bufferData(gl.COPY_WRITE_BUFFER, nP*4, gl.DYNAMIC_DRAW)
+		gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, 0, 0, numPoints*4);
+		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Float32Array(diff).fill(0));
+		timeBufferA = newBuffer;
+		gl.bindBuffer(gl.ARRAY_BUFFER, timeBufferA);
+		gl.enableVertexAttribArray(3);
+		gl.vertexAttribPointer(3,1,gl.FLOAT, false, 0, 0);
+
+		newBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.COPY_WRITE_BUFFER, newBuffer);
+		gl.bindBuffer(gl.COPY_READ_BUFFER,lifetimeBuffer);
+		gl.bufferData(gl.COPY_WRITE_BUFFER, nP*4, gl.STATIC_DRAW)
+		gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, 0, 0, numPoints*4);
+		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Float32Array(tmp[3]));
+		lifetimeBuffer = newBuffer;
+		gl.enableVertexAttribArray(4);
+		gl.bindBuffer(gl.ARRAY_BUFFER, lifetimeBuffer);
+
+		gl.vertexAttribPointer(4,1,gl.FLOAT, false, 0, 0);
+
+		gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedbackA);
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,positionBufferA);
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,1,stateBufferA);
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,2,timeBufferA);
+
+		gl.bindVertexArray(VAOB)
+		newBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.COPY_WRITE_BUFFER, newBuffer);
+		gl.bindBuffer(gl.COPY_READ_BUFFER,positionBufferB);
+		gl.bufferData(gl.COPY_WRITE_BUFFER, nP*4*3, gl.DYNAMIC_DRAW)
+		gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, 0, 0, numPoints*4*3);
+		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4*3, new Float32Array(tmp[0]));
+		positionBufferB = newBuffer;
+		gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferB);
+		gl.enableVertexAttribArray(0);
+		gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
+
+		newBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.COPY_WRITE_BUFFER, newBuffer);
+		gl.bindBuffer(gl.COPY_READ_BUFFER,stateBufferB);
+		gl.bufferData(gl.COPY_WRITE_BUFFER, nP*4, gl.DYNAMIC_DRAW)
+		gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, 0, 0, numPoints*4);
+		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Uint32Array(tmp[2]));
+		stateBufferB = newBuffer;
+		gl.bindBuffer(gl.ARRAY_BUFFER, stateBufferB);
+		gl.enableVertexAttribArray(2)
+		gl.vertexAttribPointer(0,3,gl.UNSIGNED_INT,false,0,0);
+
+		newBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.COPY_WRITE_BUFFER, newBuffer);
+		gl.bindBuffer(gl.COPY_READ_BUFFER,timeBufferB);
+		gl.bufferData(gl.COPY_WRITE_BUFFER, nP*4, gl.DYNAMIC_DRAW)
+		gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, 0, 0, numPoints*4);
+		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Float32Array(diff).fill(0));
+		timeBufferB = newBuffer;
+		gl.bindBuffer(gl.ARRAY_BUFFER, timeBufferB);
+		gl.enableVertexAttribArray(3);
+		gl.vertexAttribPointer(3,1,gl.FLOAT,false,0,0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer)
+		gl.enableVertexAttribArray(1);
+		gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0,0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, lifetimeBuffer);
+		gl.enableVertexAttribArray(4);
+		gl.vertexAttribPointer(4,1,gl.FLOAT,false,0,0);
+
+		gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedbackB);
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,0,positionBufferB);
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,1,stateBufferB);
+		gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER,2,timeBufferB);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, null)
+		gl.bindBuffer(gl.COPY_READ_BUFFER, null)
+		gl.bindBuffer(gl.COPY_WRITE_BUFFER, null);
+
+		gl.bindVertexArray(null);
+
+		numPoints = nP;
+		drawPoints = numPoints;
+	} else{
+		drawPoints = nP;
+	}
+	numDisplay.innerText = drawPoints;
 }
+
+var ratioE, ratioB, ratioD, ratioH, ratioV;
