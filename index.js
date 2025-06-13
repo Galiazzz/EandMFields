@@ -142,7 +142,7 @@ function loadStuff(){
 
 	updateParticleNum()
 
-	//requestAnimationFrame(Draw)
+	requestAnimationFrame(Draw)
 	startTime = Date.now()
 }
 
@@ -289,7 +289,7 @@ function Draw(){
 	ratioV = 0;
 
 	startTime = Date.now()
-	//requestAnimationFrame(Draw)
+	requestAnimationFrame(Draw)
 }
 
 function CreateShader(source, type) {
@@ -592,6 +592,10 @@ function updateParticleNum(){
 		gl.enableVertexAttribArray(0);
 		gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
 
+		gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer);
+		gl.enableVertexAttribArray(1);
+		gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0);
+
 		newBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.COPY_WRITE_BUFFER, newBuffer);
 		gl.bindBuffer(gl.COPY_READ_BUFFER,stateBufferB);
@@ -601,7 +605,7 @@ function updateParticleNum(){
 		stateBufferB = newBuffer;
 		gl.bindBuffer(gl.ARRAY_BUFFER, stateBufferB);
 		gl.enableVertexAttribArray(2)
-		gl.vertexAttribPointer(2,1,gl.UNSIGNED_INT,false,0,0);
+		gl.vertexAttribIPointer(2,1,gl.UNSIGNED_INT,false,0,0);
 
 		newBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.COPY_WRITE_BUFFER, newBuffer);
@@ -613,10 +617,6 @@ function updateParticleNum(){
 		gl.bindBuffer(gl.ARRAY_BUFFER, timeBufferB);
 		gl.enableVertexAttribArray(3);
 		gl.vertexAttribPointer(3,1,gl.FLOAT,false,0,0);
-
-		gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer);
-		gl.enableVertexAttribArray(1);
-		gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, lifetimeBuffer);
 		gl.enableVertexAttribArray(4);
