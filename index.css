@@ -14,3 +14,11 @@ html, body{
     width: 100%;
     /*overflow-y: hidden;*/
 }
+
+.ranges{
+    width: 60%;
+}
+
+.displays{
+    margin-left: 5em;
+}

@@ -35,6 +35,7 @@ function loadStuff(){
 		alert("Sorry, Webgl2 doesn't appear to be supported on this device\n:(");
 	}
 
+	ratios=[1,0,0,0,0];
 	for (var i = 0; i < numPoints; i++){
 		positions.push(Math.random()*2-1)
 		positions.push(Math.random()*2-1)
@@ -71,7 +72,7 @@ function loadStuff(){
 
 	typeBuffer = gl.createBuffer();
 	gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer)
-	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(types), gl.STATIC_DRAW);
+	gl.bufferData(gl.ARRAY_BUFFER, new Uint32Array(types), gl.DYNAMIC_DRAW);
 	gl.enableVertexAttribArray(1);
 	gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0)
 
@@ -141,6 +142,7 @@ function loadStuff(){
 	currentTransformFeedback = transformFeedbackB;
 
 	updateParticleNum()
+	updateParticleTypes(0)
 
 	requestAnimationFrame(Draw)
 	startTime = Date.now()
@@ -281,12 +283,6 @@ function Draw(){
 	}
 
 	updateParticleNum()
-
-	ratioE = 1;
-	ratioB = 0;
-	ratioD = 0;
-	ratioH = 0;
-	ratioV = 0;
 
 	startTime = Date.now()
 	requestAnimationFrame(Draw)
@@ -506,11 +502,11 @@ function updateParticleNum(){
 			tmp[3].push(Math.random()*5*1000)
 		}
 		
-		numE = Math.round(diff*ratioE);
-		numB = Math.round(diff*ratioB);
-		numD = Math.round(diff*ratioD);
-		numH = Math.round(diff*ratioH);
-		numV = Math.round(diff*ratioV);
+		numE = Math.round(diff*ratios[0]);
+		numB = Math.round(diff*ratios[1]);
+		numD = Math.round(diff*ratios[2]);
+		numH = Math.round(diff*ratios[3]);
+		numV = Math.round(diff*ratios[4]);
 		for(i = 0; i < numE; i++){tmp[1].push(0);}
 		for(i = 0; i < numB; i++){tmp[1].push(1);}
 		for(i = 0; i < numD; i++){tmp[1].push(2);}
@@ -528,18 +524,16 @@ function updateParticleNum(){
 		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4*3, new Float32Array(tmp[0]));
 		positionBufferA = newBuffer;
 		gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferA);
-		gl.enableVertexAttribArray(0);
 		gl.vertexAttribPointer(0,3,gl.FLOAT, false, 0, 0);
 
 		newBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.COPY_WRITE_BUFFER,newBuffer);
 		gl.bindBuffer(gl.COPY_READ_BUFFER,typeBuffer);
-		gl.bufferData(gl.COPY_WRITE_BUFFER, nP*4, gl.STATIC_DRAW)
+		gl.bufferData(gl.COPY_WRITE_BUFFER, nP*4, gl.DYNAMIC_DRAW)
 		gl.copyBufferSubData(gl.COPY_READ_BUFFER, gl.COPY_WRITE_BUFFER, 0, 0, numPoints*4);
 		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Uint32Array(tmp[1]));
 		typeBuffer = newBuffer;
 		gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer);
-		gl.enableVertexAttribArray(1);
 		gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0);
 
 		newBuffer = gl.createBuffer();
@@ -550,7 +544,6 @@ function updateParticleNum(){
 		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Uint32Array(tmp[2]));
 		stateBufferA = newBuffer;
 		gl.bindBuffer(gl.ARRAY_BUFFER, stateBufferA);
-		gl.enableVertexAttribArray(2);
 		gl.vertexAttribIPointer(2,1,gl.UNSIGNED_INT, false, 0, 0);
 
 		newBuffer = gl.createBuffer();
@@ -561,7 +554,6 @@ function updateParticleNum(){
 		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Float32Array(diff).fill(0));
 		timeBufferA = newBuffer;
 		gl.bindBuffer(gl.ARRAY_BUFFER, timeBufferA);
-		gl.enableVertexAttribArray(3);
 		gl.vertexAttribPointer(3,1,gl.FLOAT, false, 0, 0);
 
 		newBuffer = gl.createBuffer();
@@ -572,7 +564,6 @@ function updateParticleNum(){
 		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Float32Array(tmp[3]));
 		lifetimeBuffer = newBuffer;
 		gl.bindBuffer(gl.ARRAY_BUFFER, lifetimeBuffer);
-		gl.enableVertexAttribArray(4);
 		gl.vertexAttribPointer(4,1,gl.FLOAT, false, 0, 0);
 
 		gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedbackA);
@@ -589,11 +580,9 @@ function updateParticleNum(){
 		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4*3, new Float32Array(tmp[0]));
 		positionBufferB = newBuffer;
 		gl.bindBuffer(gl.ARRAY_BUFFER, positionBufferB);
-		gl.enableVertexAttribArray(0);
 		gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer);
-		gl.enableVertexAttribArray(1);
 		gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0);
 
 		newBuffer = gl.createBuffer();
@@ -604,7 +593,6 @@ function updateParticleNum(){
 		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Uint32Array(tmp[2]));
 		stateBufferB = newBuffer;
 		gl.bindBuffer(gl.ARRAY_BUFFER, stateBufferB);
-		gl.enableVertexAttribArray(2)
 		gl.vertexAttribIPointer(2,1,gl.UNSIGNED_INT,false,0,0);
 
 		newBuffer = gl.createBuffer();
@@ -615,11 +603,9 @@ function updateParticleNum(){
 		gl.bufferSubData(gl.COPY_WRITE_BUFFER, numPoints*4, new Float32Array(diff).fill(0));
 		timeBufferB = newBuffer;
 		gl.bindBuffer(gl.ARRAY_BUFFER, timeBufferB);
-		gl.enableVertexAttribArray(3);
 		gl.vertexAttribPointer(3,1,gl.FLOAT,false,0,0);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, lifetimeBuffer);
-		gl.enableVertexAttribArray(4);
 		gl.vertexAttribPointer(4,1,gl.FLOAT, false, 0, 0);
 
 		gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedbackB);
@@ -635,10 +621,114 @@ function updateParticleNum(){
 
 		numPoints = nP;
 		drawPoints = numPoints;
+
+		positions.concat(tmp[0]);
+		types.concat(tmp[1]);
+		states.push(tmp[2]);
+		lifetimes.push(tmp[3]);
 	} else{
 		drawPoints = nP;
 	}
-	numDisplay.innerText = drawPoints;
+	numDisplay.innerText = "Number of Particles: "+drawPoints;
+	updateParticleTypes(0);
 }
+				 //[     0,      1,      2,      3,      4]
+var ratios = []; //[ratioE, ratioB, ratioD, ratioH, ratioV]
+var inputE = document.getElementById("fracE");
+var inputB = document.getElementById("fracB");
+var inputD = document.getElementById("fracD");
+var inputH = document.getElementById("fracH");
+var inputV = document.getElementById("fracV");
+function updateParticleTypes(selection){
+	var E = parseFloat(inputE.value);
+	var B = parseFloat(inputB.value);
+	var D = parseFloat(inputD.value);
+	var H = parseFloat(inputH.value);
+	var V = parseFloat(inputV.value);
 
-var ratioE, ratioB, ratioD, ratioH, ratioV;
+	var arr = [E, B, D, H, V];
+	var otherSum = 0;
+	for(i=0; i < arr.length; i++){
+		if(i != selection){
+			otherSum += arr[i];
+		}
+	}
+	if(otherSum > 0){
+		switch(selection){
+			case 0:
+				ratios[0] = E;
+				// var rB = ratios[1]/(ratios[1]+ratios[2]+ratios[3]+ratios[4]);
+				// var rDB = ratios[2]/ratios[1];
+				// var rHB = ratios[3]/ratios[1];
+				// var rVB = ratios[4]/ratios[1];
+				// ratios[1] = (1-ratios[0])*rB;
+				// ratios[2] = ratios[1]*rDB;
+				// ratios[3] = ratios[1]*rHB;
+				// ratios[4] = ratios[1]*rVB;
+				break;
+			case 1:
+				ratios[1]=B;
+				break;
+			case 2:
+				ratios[2]=D;
+				break;
+			case 3:
+				ratios[3]=H;
+				break;
+			case 4:
+				ratios[4]=V;
+				break;
+			default: break;
+		}
+	}
+
+	baseIndex = -1;
+	for(var i = 0; i < arr.length; i++){
+		if(arr[i]>0 && i != selection){
+			baseIndex = i;
+			break;
+		}
+	}
+	if(baseIndex > -1){
+		ratios[baseIndex] = (1-ratios[selection]) * arr[baseIndex]/otherSum;
+		for(var i = 0; i < arr.length; i++){
+			if(i == selection || i == baseIndex){
+				continue;
+			}
+			ratios[i]=ratios[baseIndex]*arr[i]/arr[baseIndex];
+		}
+	}
+
+	document.getElementById("Edisplay").innerText = "E particle fraction: "+ratios[0];
+	document.getElementById("Bdisplay").innerText = "B particle fraction: "+ratios[1];
+	document.getElementById("Ddisplay").innerText = "D particle fraction: "+ratios[2];
+	document.getElementById("Hdisplay").innerText = "H particle fraction: "+ratios[3];
+	document.getElementById("Vdisplay").innerText = "V particle fraction: "+ratios[4];
+	document.getElementById("fracE").value = ratios[0];
+	document.getElementById("fracB").value = ratios[1];
+	document.getElementById("fracD").value = ratios[2];
+	document.getElementById("fracH").value = ratios[3];
+	document.getElementById("fracV").value = ratios[4];
+
+	for(var i = 0; i < arr.length; i++){
+		arr[i]=Math.round(drawPoints*ratios[i]);
+	}
+	var index = 0;
+	for(var i = 0; i < drawPoints; i++){
+		if(arr[index]==0){
+			index++;
+		}
+		types[i] = index;
+		arr[index]--;
+	}
+	gl.bindVertexArray(VAOA);
+	gl.bindBuffer(gl.ARRAY_BUFFER, typeBuffer);
+	gl.bufferSubData(gl.ARRAY_BUFFER, 0, new Uint32Array(types));
+	gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0);
+
+	gl.bindVertexArray(VAOB);
+	gl.vertexAttribIPointer(1,1,gl.UNSIGNED_INT, false, 0, 0);
+
+
+	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+}
