@@ -15,11 +15,10 @@ var vertexShader = `#version 300 es
     out float t;
     out vec4 color;
 
-    const float epsilon_0 = 8.85418782e-12; //m^-3 kg^-1 s^4 A^2\\
-    const float PI = 3.14159265359;
-    const float mu_0 = 1.25663706127e-6; //N A^-2
-
-    const float timeScale = 1.0;
+    float epsilon_0 = 8.85418782e-12; //m^-3 kg^-1 s^4 A^2
+    float PI = 3.14159265359;
+    float mu_0 = 1.25663706127e-6; //N A^-2
+    const float timeScale = 1e-11;
 
     uint xorshift(uint st){
         st ^= st << 14;
@@ -39,7 +38,9 @@ var vertexShader = `#version 300 es
         
         if(type==0u){ //Electric fields
             ptColor=vec4(0.0,0.5,1.0,1.0);
-            pos = vec3(position.x+dt*0.001*0.05,position.y,position.z);
+            vec3 dir = position;
+            float mag = (1./(4.*PI*epsilon_0))* (1.*1.)/(dir.x*dir.x+dir.y*dir.y+dir.z*dir.z);
+            pos = position + dir*mag*timeScale;//vec3(position.x+dt*0.001*0.05,position.y,position.z);
         }
         if(type==1u){ //Magnetic fields
             ptColor=vec4(1.0,0.2,0.2,1.0);
