@@ -39,26 +39,29 @@ var vertexShader = `#version 300 es
         
         if(type==0u){ //Electric fields
             ptColor=vec4(0.0,0.5,1.0,1.0);
-
+            pos = vec3(position.x+dt*0.001*0.05,position.y,position.z);
         }
         if(type==1u){ //Magnetic fields
             ptColor=vec4(1.0,0.2,0.2,1.0);
+            pos = vec3(position.x,position.y+dt*0.001*0.05,position.z);
         }
         if(type==2u){ //Electric displacement field
             ptColor=vec4(0.7,0.0,1.0,1.0);
+            pos = vec3(position.x,position.y,position.z+dt*0.001*0.05);
         }
         if(type==3u){ //H field
             ptColor=vec4(1.0,1.0,0.0,1.0);
+            pos = vec3(position.x-dt*0.001*0.05,position.y,position.z);
         }
         if(type==4u){ //Vector potential
             ptColor=vec4(0.0,1.0,0.0,1.0);
+            pos = vec3(position.x,position.y-dt*0.001*0.05,position.z);
         }
 
 
         color = ptColor;
         vec4 transformed = vec4(position, 1) * transform;
 		//color.a = 1.0 / transformed.z;
-        pos = vec3(position.x+dt*0.001*0.05,position.y,position.z);
         s = state;
         t = time+dt;
         if(t>lifetime){

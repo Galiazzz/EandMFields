@@ -715,9 +715,10 @@ function updateParticleTypes(selection){
 	}
 	var index = 0;
 	for(var i = 0; i < drawPoints; i++){
-		if(arr[index]==0){
+		while(arr[index]==0){
 			index++;
 		}
+		if(index >= arr.length){break;}
 		types[i] = index;
 		arr[index]--;
 	}
