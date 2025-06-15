@@ -9,7 +9,7 @@
 </head>
 <body onload="loadStuff()">
     <canvas id="canvas" onclick="CanvasClick()" ondblclick="CanvasDoubleClick()"></canvas>
-    0<input type="range" id="numParticleSlider" min = "0" max = "10000" oninput="updateParticleNum()" value = 1000 class="ranges">10,000 <span id="particleDisplay" class="displays"></span><br>
+    0<input type="range" id="numParticleSlider" min = "0" max = "100" oninput="updateParticleNum()" value = 10 class="ranges">100<span id="particleDisplay" class="displays"></span><br>
     0<input type="range" id="fracE" min="0" max="1" oninput="updateParticleTypes(0)" class="ranges" value="1" step="any">1 <span id="Edisplay" class="displays"></span><br>
     0<input type="range" id="fracB" min="0" max="1" oninput="updateParticleTypes(1)" class="ranges" value="0" step="any">1 <span id="Bdisplay" class="displays"></span><br>
     0<input type="range" id="fracD" min="0" max="1" oninput="updateParticleTypes(2)" class="ranges" value="0" step="any">1 <span id="Ddisplay" class="displays"></span><br>

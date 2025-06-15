@@ -35,12 +35,13 @@ var vertexShader = `#version 300 es
 
     void main(){
         vec4 ptColor = vec4(1.0,1.0,1.0,1.0);
-        
+        vec3 v = vec3(0.,0.,0.);
+
         if(type==0u){ //Electric fields
             ptColor=vec4(0.0,0.5,1.0,1.0);
             vec3 dir = position;
             float mag = (1./(4.*PI*epsilon_0))* (1.*1.)/(dir.x*dir.x+dir.y*dir.y+dir.z*dir.z);
-            pos = position + dir*mag*timeScale;//vec3(position.x+dt*0.001*0.05,position.y,position.z);
+            v = dir*mag;//vec3(position.x+dt*0.001*0.05,position.y,position.z);
         }
         if(type==1u){ //Magnetic fields
             ptColor=vec4(1.0,0.2,0.2,1.0);
@@ -59,8 +60,9 @@ var vertexShader = `#version 300 es
             pos = vec3(position.x,position.y-dt*0.001*0.05,position.z);
         }
 
-
-        color = ptColor;
+        pos = position + timeScale*v;
+        float colorMultiplier = length(v)*timeScale*8.0;
+        color = ptColor*colorMultiplier;
         vec4 transformed = vec4(position, 1) * transform;
 		//color.a = 1.0 / transformed.z;
         s = state;
@@ -75,6 +77,7 @@ var vertexShader = `#version 300 es
             pos.z = float(s)/float(1u<<31)-1.;//Random01(s);
         }
         gl_Position = transformed;
+        gl_Position.z *= -colorMultiplier;
         gl_PointSize = 3.0;
     }
 `;

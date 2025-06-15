@@ -35,6 +35,9 @@ function loadStuff(){
 		alert("Sorry, Webgl2 doesn't appear to be supported on this device\n:(");
 	}
 
+	gl.enable(gl.DEPTH_TEST);
+	gl.depthFunc(gl.LEQUAL);
+
 	ratios=[1,0,0,0,0];
 	for (var i = 0; i < numPoints; i++){
 		positions.push(Math.random()*2-1)
@@ -282,7 +285,7 @@ function Draw(){
 		angleY += 0.01 * timeMultiplier;
 	}
 
-	updateParticleNum()
+	//updateParticleNum()
 
 	startTime = Date.now()
 	requestAnimationFrame(Draw)
@@ -489,7 +492,8 @@ document.addEventListener("touchcancel", EndPointer);
 numSlider = document.getElementById("numParticleSlider");
 numDisplay = document.getElementById("particleDisplay");
 function updateParticleNum(){
-	var nP = parseInt(numSlider.value)
+	var base = parseInt(numSlider.value);
+	var nP = Math.pow(base,3);
 	var diff = nP - numPoints;
 	if(diff>0){
 		var tmp = [[],[],[],[]];
@@ -629,7 +633,7 @@ function updateParticleNum(){
 	} else{
 		drawPoints = nP;
 	}
-	numDisplay.innerText = "Number of Particles: "+drawPoints;
+	numDisplay.innerText = `Number of Particles: ${base}^3 = ${drawPoints}`;
 	updateParticleTypes(0);
 }
 				 //[     0,      1,      2,      3,      4]
