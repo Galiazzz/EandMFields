@@ -488,6 +488,17 @@ function EndPointer(e) {
 document.addEventListener("touchend", EndPointer);
 document.addEventListener("touchcancel", EndPointer);
 
+document.addEventListener("wheel", function(e) {
+	if (canvasFocused) {
+		e.preventDefault();
+		var dist = -e.deltaY * 0.5;
+		var direction = RadiansToPointOnSphere({ RA: -angleY, DEC: angleX });
+		camX += 0.01 * dist * direction[0] * speedModifier;
+		camY += 0.01 * dist * direction[1] * speedModifier;
+		camZ += 0.01 * dist * direction[2] * speedModifier;
+	}
+}, { passive: false });
+
 
 numSlider = document.getElementById("numParticleSlider");
 numDisplay = document.getElementById("particleDisplay");
