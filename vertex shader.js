@@ -18,7 +18,7 @@ var vertexShader = `#version 300 es
     float epsilon_0 = 8.85418782e-12; //m^-3 kg^-1 s^4 A^2
     float PI = 3.14159265359;
     float mu_0 = 1.25663706127e-6; //N A^-2
-    const float timeScale = 1e-11;
+    const float timeScale = 1e-6;
 
     uint xorshift(uint st){
         st ^= st << 14;
@@ -36,6 +36,7 @@ var vertexShader = `#version 300 es
     void main(){
         vec4 ptColor = vec4(1.0,1.0,1.0,1.0);
         vec3 v = vec3(0.,0.,0.);
+        float colorMultiplier = 1.;
 
         if(type==0u){ //Electric fields
             ptColor=vec4(0.0,0.5,1.0,1.0);
@@ -45,23 +46,28 @@ var vertexShader = `#version 300 es
         }
         if(type==1u){ //Magnetic fields
             ptColor=vec4(1.0,0.2,0.2,1.0);
-            pos = vec3(position.x,position.y+dt*0.001*0.05,position.z);
+            v = vec3(0.,1e8,0.);
+            colorMultiplier*=1e2;
         }
         if(type==2u){ //Electric displacement field
             ptColor=vec4(0.7,0.0,1.0,1.0);
-            pos = vec3(position.x,position.y,position.z+dt*0.001*0.05);
+            v = vec3(0.,0.,1e8);
+            colorMultiplier*=1e2;
         }
         if(type==3u){ //H field
             ptColor=vec4(1.0,1.0,0.0,1.0);
-            pos = vec3(position.x-dt*0.001*0.05,position.y,position.z);
+            v = vec3(-1e8,0.,0.);
+            colorMultiplier*=1e2;
         }
         if(type==4u){ //Vector potential
             ptColor=vec4(0.0,1.0,0.0,1.0);
             pos = vec3(position.x,position.y-dt*0.001*0.05,position.z);
+            v = vec3(0.,-1e8,0.);
+            colorMultiplier*=1e2;
         }
 
-        pos = position + timeScale*v;
-        float colorMultiplier = length(v)*timeScale*8.0;
+        pos = position + timeScale*v*dt*1e-6;
+        colorMultiplier *= length(v)*1e-10;
         color = ptColor*colorMultiplier;
         vec4 transformed = vec4(position, 1) * transform;
 		//color.a = 1.0 / transformed.z;
