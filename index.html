@@ -15,6 +15,10 @@
     0<input type="range" id="fracD" min="0" max="1" oninput="updateParticleTypes(2)" class="ranges" value="0" step="any">1 <span id="Ddisplay" class="displays"></span><br>
     0<input type="range" id="fracH" min="0" max="1" oninput="updateParticleTypes(3)" class="ranges" value="0" step="any">1 <span id="Hdisplay" class="displays"></span><br>
     0<input type="range" id="fracV" min="0" max="1" oninput="updateParticleTypes(4)" class="ranges" value="0" step="any">1 <span id="Vdisplay" class="displays"></span><br>
+    <br>
+    0<input type="range" id="sRadius" min="0" max="10" class="ranges" value="1" step="any" oninput="spawnRadius=this.value;document.getElementById('radDisplay').innerText='Particle Span Radius: '+this.value">10 <span id="radDisplay" class="displays">Particle Span Radius: 1</span><br>
+    0<input type="range" id="tMul" min="0" max="10" class="ranges" value="1" step="any" oninput="lifetimeMultiplier=this.value;document.getElementById('tMulDisplay').innerText='Particle Lifetime Multiplier: '+this.value">10 <span id="tMulDisplay" class="displays">Particle Lifetime Multiplier: 1</span>
+    <br>
     <script src="vertex shader.js"></script>
 	<script src="fragment shader.js"></script>
     <script src="index.js"></script>

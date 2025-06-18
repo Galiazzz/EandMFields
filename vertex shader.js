@@ -2,6 +2,8 @@ var vertexShader = `#version 300 es
     layout(std140) uniform Uniforms{ //items must be multiples of 4 bytes, so vec3 has an extra value at the end and mat3 has 3 extra values when setting
 		mat4 transform;
         float dt;
+        float spawnRadius;
+        float lifetimeMultiplier;
     };
 
     layout(location = 0) in vec3 position;
@@ -73,14 +75,14 @@ var vertexShader = `#version 300 es
 		//color.a = 1.0 / transformed.z;
         s = state;
         t = time+dt;
-        if(t>lifetime){
+        if(t>lifetime*lifetimeMultiplier){
             t=0.f;
             s = xorshift(s);
-            pos.x = float(s)/float(1u<<31)-1.;//Random01(s);
+            pos.x = (float(s)/float(1u<<31)-1.)*spawnRadius;//Random01(s);
             s = xorshift(s);
-            pos.y = float(s)/float(1u<<31)-1.;//Random01(s);
+            pos.y = (float(s)/float(1u<<31)-1.)*spawnRadius;//Random01(s);
             s = xorshift(s);
-            pos.z = float(s)/float(1u<<31)-1.;//Random01(s);
+            pos.z = (float(s)/float(1u<<31)-1.)*spawnRadius;//Random01(s);
         }
         gl_Position = transformed;
         gl_Position.z *= -colorMultiplier;

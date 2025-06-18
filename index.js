@@ -30,6 +30,9 @@ var UBOIndex;
 var numPoints = 1000;
 var drawPoints;
 
+var spawnRadius = 1;
+var lifetimeMultiplier = 1;
+
 function loadStuff(){
 	if (!gl) {
 		alert("Sorry, Webgl2 doesn't appear to be supported on this device\n:(");
@@ -40,9 +43,9 @@ function loadStuff(){
 
 	ratios=[1,0,0,0,0];
 	for (var i = 0; i < numPoints; i++){
-		positions.push(Math.random()*2-1)
-		positions.push(Math.random()*2-1)
-		positions.push(Math.random()*2-1)
+		positions.push((Math.random()*2-1)*spawnRadius)
+		positions.push((Math.random()*2-1)*spawnRadius)
+		positions.push((Math.random()*2-1)*spawnRadius)
 		types.push(0)
 		states.push(i*10000)
 		lifetimes.push(Math.random()*5*1000)
@@ -61,7 +64,7 @@ function loadStuff(){
 	//the 0 is the index of the uniform block
 	gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, UBO);
 
-	UBOVariableIndicies = gl.getUniformIndices(program, ["transform","dt"]);
+	UBOVariableIndicies = gl.getUniformIndices(program, ["transform","dt","spawnRadius","lifetimeMultiplier"]);
 	UBOVariableOffsets = gl.getActiveUniforms(program, UBOVariableIndicies, gl.UNIFORM_OFFSET);
 
 	VAOA = gl.createVertexArray()
@@ -208,6 +211,8 @@ function Draw(){
 
 	gl.bufferSubData(gl.UNIFORM_BUFFER, UBOVariableOffsets[0], new Float32Array(combined));
 	gl.bufferSubData(gl.UNIFORM_BUFFER, UBOVariableOffsets[1], new Float32Array([elapsedTime]));
+	gl.bufferSubData(gl.UNIFORM_BUFFER, UBOVariableOffsets[2], new Float32Array([spawnRadius]));
+	gl.bufferSubData(gl.UNIFORM_BUFFER, UBOVariableOffsets[3], new Float32Array([lifetimeMultiplier]));
 	gl.bindBuffer(gl.UNIFORM_BUFFER, null);
 
 	gl.viewport(0, 0, canvas.width, canvas.height);
@@ -509,9 +514,9 @@ function updateParticleNum(){
 	if(diff>0){
 		var tmp = [[],[],[],[]];
 		for(i = 0; i < diff; i++){
-			tmp[0].push(Math.random()*2-1);
-			tmp[0].push(Math.random()*2-1);
-			tmp[0].push(Math.random()*2-1);
+			tmp[0].push((Math.random()*2-1)*spawnRadius);
+			tmp[0].push((Math.random()*2-1)*spawnRadius);
+			tmp[0].push((Math.random()*2-1)*spawnRadius);
 
 			tmp[2].push(Math.floor(Math.random()*10000));
 			tmp[3].push(Math.random()*5*1000)
